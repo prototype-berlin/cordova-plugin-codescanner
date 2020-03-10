@@ -352,6 +352,9 @@ parentViewController:(UIViewController*)parentViewController
     // here we set the orientation delegate to the MainViewController of the app (orientation controlled in the Project Settings)
     self.viewController.orientationDelegate = self.plugin.viewController;
 
+    // Disable sheet pull down
+    self.viewController.modalInPresentation = YES;
+
     // delayed [self openDialog];
     [self performSelector:@selector(openDialog) withObject:nil afterDelay:1];
 }
