@@ -148,14 +148,6 @@
   }
   return NO;
 }
-//-------------------------------------------------------------------------
-- (void)viewDidLoad {
-    [super viewDidLoad];
-
-    // Disable sheet pull down
-    self.viewController.modalInPresentation = YES;
-}
-
 //--------------------------------------------------------------------------
 - (void)scan:(CDVInvokedUrlCommand*)command {
     CDVbcsProcessor* processor;
@@ -357,6 +349,8 @@ parentViewController:(UIViewController*)parentViewController
     // here we set the orientation delegate to the MainViewController of the app (orientation controlled in the Project Settings)
     self.viewController.orientationDelegate = self.plugin.viewController;
 
+    // Prevent modal from pull down (ios 13)
+    self.viewController.modalInPresentation = YES;
     // delayed [self openDialog];
     [self performSelector:@selector(openDialog) withObject:nil afterDelay:1];
 }
