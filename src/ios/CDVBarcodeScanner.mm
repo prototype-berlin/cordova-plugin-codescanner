@@ -149,7 +149,7 @@
   return NO;
 }
 //-------------------------------------------------------------------------
-- (void)viewDidLoad:(BOOL)animated{
+- (void)viewDidLoad {
     [super viewDidLoad];
 
     // Disable sheet pull down
