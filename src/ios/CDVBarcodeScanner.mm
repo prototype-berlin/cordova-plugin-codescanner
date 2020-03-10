@@ -148,8 +148,13 @@
   }
   return NO;
 }
+//-------------------------------------------------------------------------
+- (void)viewDidLoad:(BOOL)animated{
+    [super viewDidLoad];
 
-
+    // Disable sheet pull down
+    self.viewController.modalInPresentation = YES;
+}
 
 //--------------------------------------------------------------------------
 - (void)scan:(CDVInvokedUrlCommand*)command {
@@ -351,9 +356,6 @@ parentViewController:(UIViewController*)parentViewController
     self.viewController = [[CDVbcsViewController alloc] initWithProcessor: self alternateOverlay:self.alternateXib];
     // here we set the orientation delegate to the MainViewController of the app (orientation controlled in the Project Settings)
     self.viewController.orientationDelegate = self.plugin.viewController;
-
-    // Disable sheet pull down
-    self.viewController.modalInPresentation = YES;
 
     // delayed [self openDialog];
     [self performSelector:@selector(openDialog) withObject:nil afterDelay:1];
