@@ -963,24 +963,14 @@ parentViewController:(UIViewController*)parentViewController
 //-------------------------------------------------------------------------
 // builds the green box and red line
 //-------------------------------------------------------------------------
+
 - (UIImage*)buildReticleImage {
-    UIImage* result;
+     UIImage* result;
     UIGraphicsBeginImageContext(CGSizeMake(RETICLE_SIZE, RETICLE_SIZE));
     CGContextRef context = UIGraphicsGetCurrentContext();
 
-    if (self.processor.is1D) {
-        UIColor* color = [UIColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:RETICLE_ALPHA];
-        CGContextSetStrokeColorWithColor(context, color.CGColor);
-        CGContextSetLineWidth(context, RETICLE_WIDTH);
-        CGContextBeginPath(context);
-        CGFloat lineOffset = (CGFloat) (RETICLE_OFFSET+(0.5*RETICLE_WIDTH));
-        CGContextMoveToPoint(context, lineOffset, RETICLE_SIZE/2);
-        CGContextAddLineToPoint(context, RETICLE_SIZE-lineOffset, (CGFloat) (0.5*RETICLE_SIZE));
-        CGContextStrokePath(context);
-    }
-
     if (self.processor.is2D) {
-        UIColor* color = [UIColor colorWithRed:0.0 green:1.0 blue:0.0 alpha:RETICLE_ALPHA];
+        UIColor* color = [UIColor colorWithRed:0.984 green:0.235 blue:0.313 alpha:RETICLE_ALPHA];
         CGContextSetStrokeColorWithColor(context, color.CGColor);
         CGContextSetLineWidth(context, RETICLE_WIDTH);
         CGContextStrokeRect(context,
@@ -991,6 +981,44 @@ parentViewController:(UIViewController*)parentViewController
                                        RETICLE_SIZE-2*RETICLE_OFFSET
                                        )
                             );
+        // top-left
+        CGContextStrokeRect(context,
+        CGRectMake(
+                   RETICLE_OFFSET
+                +2*RETICLE_WIDTH, // geometry width as inner offset
+                   RETICLE_OFFSET
+                +2*RETICLE_WIDTH, // geometry width as inner offset
+                   (RETICLE_SIZE-2*RETICLE_OFFSET)/7.5,
+                   (RETICLE_SIZE-2*RETICLE_OFFSET)/7.5
+                   )
+        );
+        // top-right
+        CGContextStrokeRect(context,
+        CGRectMake(
+                   RETICLE_OFFSET
+                  +RETICLE_SIZE-2*RETICLE_OFFSET // rect size
+                 -(RETICLE_SIZE-2*RETICLE_OFFSET)/7.5 // marker size
+                -2*RETICLE_WIDTH, // geometry width as inner offset
+                   RETICLE_OFFSET
+                +2*RETICLE_WIDTH, // geometry width as inner offset
+                  (RETICLE_SIZE-2*RETICLE_OFFSET)/7.5,
+                  (RETICLE_SIZE-2*RETICLE_OFFSET)/7.5
+                  )
+       );
+        // bottom-left
+        CGContextStrokeRect(context,
+        CGRectMake(
+                   RETICLE_OFFSET
+                +2*RETICLE_WIDTH,
+                   RETICLE_OFFSET
+                 +(RETICLE_SIZE-2*RETICLE_OFFSET) // rect size
+                 -(RETICLE_SIZE-2*RETICLE_OFFSET)/7.5 // marker size
+                -2*RETICLE_WIDTH, // geometry width as inner offset  ,
+                  (RETICLE_SIZE-2*RETICLE_OFFSET)/7.5,
+                  (RETICLE_SIZE-2*RETICLE_OFFSET)/7.5
+                  )
+        );
+       
     }
 
     result = UIGraphicsGetImageFromCurrentImageContext();
