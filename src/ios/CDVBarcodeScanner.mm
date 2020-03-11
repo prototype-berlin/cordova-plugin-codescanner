@@ -349,8 +349,12 @@ parentViewController:(UIViewController*)parentViewController
     // here we set the orientation delegate to the MainViewController of the app (orientation controlled in the Project Settings)
     self.viewController.orientationDelegate = self.plugin.viewController;
 
-    // Prevent modal from pull down (ios 13)
-    self.viewController.modalInPresentation = YES;
+    NSOperatingSystemVersion ios13_0_0 = (NSOperatingSystemVersion){13, 0, 0};
+    if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:ios13_0_0]) {
+       // iOS 13.0.0 and above logic
+        // Prevent modal from pull down (ios 13)
+        self.viewController.modalInPresentation = YES;
+    }
     // delayed [self openDialog];
     [self performSelector:@selector(openDialog) withObject:nil afterDelay:1];
 }
