@@ -17,7 +17,7 @@
 @protocol CDVBarcodeScannerOrientationDelegate <NSObject>
 
 - (NSUInteger)supportedInterfaceOrientations;
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation;
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientaton)interfaceOrientation;
 - (BOOL)shouldAutorotate;
 
 @end
@@ -57,6 +57,7 @@
 @property (nonatomic, retain) NSString*                   alternateXib;
 @property (nonatomic, retain) NSMutableArray*             results;
 @property (nonatomic, retain) NSString*                   formats;
+@property (nonatomic, retain) NSString*                   color;
 @property (nonatomic)         BOOL                        is1D;
 @property (nonatomic)         BOOL                        is2D;
 @property (nonatomic)         BOOL                        capturing;
@@ -66,7 +67,6 @@
 @property (nonatomic)         BOOL                        isFlipped;
 @property (nonatomic)         BOOL                        isTransitionAnimated;
 @property (nonatomic)         BOOL                        isSuccessBeepEnabled;
-
 
 - (id)initWithPlugin:(CDVBarcodeScanner*)plugin callback:(NSString*)callback parentViewController:(UIViewController*)parentViewController alterateOverlayXib:(NSString *)alternateXib;
 - (void)scanBarcode;
@@ -148,6 +148,19 @@
   }
   return NO;
 }
+
+//--------------------------------------------------------------------------
+static UIColor * UIColorWithHexString(NSString *hex) {
+   unsigned int rgb = 0;
+   [[NSScanner scannerWithString:
+     [[hex uppercaseString] stringByTrimmingCharactersInSet:
+      [[NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"] invertedSet]]]
+    scanHexInt:&rgb];
+   return [UIColor colorWithRed:((CGFloat)((rgb & 0xFF0000) >> 16)) / 255.0
+                          green:((CGFloat)((rgb & 0xFF00) >> 8)) / 255.0
+                           blue:((CGFloat)(rgb & 0xFF)) / 255.0
+                          alpha:1.0];
+}
 //--------------------------------------------------------------------------
 - (void)scan:(CDVInvokedUrlCommand*)command {
     CDVbcsProcessor* processor;
@@ -211,7 +224,9 @@
     processor.isTransitionAnimated = !disableAnimations;
 
     processor.formats = options[@"formats"];
-
+    
+    processor.color = options[@"color"];
+    
     [processor performSelector:@selector(scanBarcode) withObject:nil afterDelay:0];
 }
 
@@ -970,7 +985,7 @@ parentViewController:(UIViewController*)parentViewController
     CGContextRef context = UIGraphicsGetCurrentContext();
 
     if (self.processor.is2D) {
-        UIColor* color = [UIColor colorWithRed:0.984 green:0.235 blue:0.313 alpha:RETICLE_ALPHA];
+        UIColor* color = UIColorWithHexString(self.processor.color);
         CGContextSetStrokeColorWithColor(context, color.CGColor);
         CGContextSetLineWidth(context, RETICLE_WIDTH);
         CGContextStrokeRect(context,
@@ -1101,3 +1116,4 @@ parentViewController:(UIViewController*)parentViewController
 }
 
 @end
+i
