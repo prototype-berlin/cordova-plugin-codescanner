@@ -10,20 +10,19 @@
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <Cordova/CDVPlugin.h>
 
-
 //------------------------------------------------------------------------------
 // Delegate to handle orientation functions
 //------------------------------------------------------------------------------
 @protocol CDVBarcodeScannerOrientationDelegate <NSObject>
 
 - (NSUInteger)supportedInterfaceOrientations;
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientaton)interfaceOrientation;
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation;
 - (BOOL)shouldAutorotate;
 
 @end
 
 //------------------------------------------------------------------------------
-// Adds a shutter button to the UI, and changes the scan from continuous to
+// Adds a shutter button to the UI, and changes the scan from continuous to >
 // only performing a scan when you click the shutter button.  For testing.
 //------------------------------------------------------------------------------
 #define USE_SHUTTER 0
@@ -50,14 +49,23 @@
 @interface CDVbcsProcessor : NSObject <AVCaptureMetadataOutputObjectsDelegate> {}
 @property (nonatomic, retain) CDVBarcodeScanner*           plugin;
 @property (nonatomic, retain) NSString*                   callback;
+
 @property (nonatomic, retain) UIViewController*           parentViewController;
-@property (nonatomic, retain) CDVbcsViewController*        viewController;
+@property (nonatomic, retain) CDVbcsViewController*       viewController;
+
 @property (nonatomic, retain) AVCaptureSession*           captureSession;
 @property (nonatomic, retain) AVCaptureVideoPreviewLayer* previewLayer;
 @property (nonatomic, retain) NSString*                   alternateXib;
 @property (nonatomic, retain) NSMutableArray*             results;
 @property (nonatomic, retain) NSString*                   formats;
-@property (nonatomic, retain) NSString*                   color;
+
+// Reticle
+@property (nonatomic, retain) NSString*                   reticleSize;
+@property (nonatomic, retain) NSString*                   reticleColor;
+@property (nonatomic, retain) NSString*                   reticleOpacity;
+@property (nonatomic, retain) NSString*                   reticleImageFile;
+@property (nonatomic)         BOOL                        recticleIsImage;
+
 @property (nonatomic)         BOOL                        is1D;
 @property (nonatomic)         BOOL                        is2D;
 @property (nonatomic)         BOOL                        capturing;
@@ -67,6 +75,7 @@
 @property (nonatomic)         BOOL                        isFlipped;
 @property (nonatomic)         BOOL                        isTransitionAnimated;
 @property (nonatomic)         BOOL                        isSuccessBeepEnabled;
+
 
 - (id)initWithPlugin:(CDVBarcodeScanner*)plugin callback:(NSString*)callback parentViewController:(UIViewController*)parentViewController alterateOverlayXib:(NSString *)alternateXib;
 - (void)scanBarcode;
@@ -150,7 +159,10 @@
 }
 
 //--------------------------------------------------------------------------
-static UIColor * UIColorWithHexString(NSString *hex) {
+static UIColor * UIColorFromHexString(NSString *hex, NSString *opacity) {
+    
+   float opacityFloat = [opacity floatValue];
+    
    unsigned int rgb = 0;
    [[NSScanner scannerWithString:
      [[hex uppercaseString] stringByTrimmingCharactersInSet:
@@ -159,7 +171,7 @@ static UIColor * UIColorWithHexString(NSString *hex) {
    return [UIColor colorWithRed:((CGFloat)((rgb & 0xFF0000) >> 16)) / 255.0
                           green:((CGFloat)((rgb & 0xFF00) >> 8)) / 255.0
                            blue:((CGFloat)(rgb & 0xFF)) / 255.0
-                          alpha:1.0];
+                          alpha:opacityFloat];
 }
 //--------------------------------------------------------------------------
 - (void)scan:(CDVInvokedUrlCommand*)command {
@@ -225,8 +237,21 @@ static UIColor * UIColorWithHexString(NSString *hex) {
 
     processor.formats = options[@"formats"];
     
-    processor.color = options[@"color"];
+    // Reticle
+    processor.reticleSize = options[@"reticleSize"];
+    processor.reticleColor = options[@"reticleColor"];
+    processor.reticleOpacity = options[@"reticleOpacity"];
     
+
+    if([options objectForKey:@"reticleImageFile"]) {
+       processor.recticleIsImage = YES;
+       processor.reticleImageFile = options[@"reticleImageFile"];
+        NSLog(@"exist");
+    } else {
+       processor.recticleIsImage = NO;
+         NSLog(@"doesn't exist");
+    }
+
     [processor performSelector:@selector(scanBarcode) withObject:nil afterDelay:0];
 }
 
@@ -364,12 +389,13 @@ parentViewController:(UIViewController*)parentViewController
     // here we set the orientation delegate to the MainViewController of the app (orientation controlled in the Project Settings)
     self.viewController.orientationDelegate = self.plugin.viewController;
 
+    // iOS 13.0.0 and above logic
     NSOperatingSystemVersion ios13_0_0 = (NSOperatingSystemVersion){13, 0, 0};
     if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:ios13_0_0]) {
-       // iOS 13.0.0 and above logic
-        // Prevent modal from pull down (ios 13)
-        self.viewController.modalInPresentation = YES;
+       // Prevent modal from pull down (ios 13)
+       self.viewController.modalInPresentation = YES;
     }
+
     // delayed [self openDialog];
     [self performSelector:@selector(openDialog) withObject:nil afterDelay:1];
 }
@@ -595,7 +621,7 @@ parentViewController:(UIViewController*)parentViewController
 #endif
 
 
-    try {
+    @try {
         // This will bring in multiple entities if there are multiple 2D codes in frame.
         for (AVMetadataObject *metaData in metadataObjects) {
             AVMetadataMachineReadableCodeObject* code = (AVMetadataMachineReadableCodeObject*)[self.previewLayer transformedMetadataObjectForMetadataObject:(AVMetadataMachineReadableCodeObject*)metaData];
@@ -605,7 +631,7 @@ parentViewController:(UIViewController*)parentViewController
             }
         }
     }
-    catch (...) {
+    @catch (...) {
         //            NSLog(@"decoding: unknown exception");
         //            [self barcodeScanFailed:@"unknown exception decoding barcode"];
     }
@@ -859,14 +885,14 @@ parentViewController:(UIViewController*)parentViewController
         return nil;
     }
 
-	self.overlayView.autoresizesSubviews = YES;
+    self.overlayView.autoresizesSubviews = YES;
     self.overlayView.autoresizingMask    = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.overlayView.opaque              = NO;
 
-	CGRect bounds = self.view.bounds;
+    CGRect bounds = self.view.bounds;
     bounds = CGRectMake(0, 0, bounds.size.width, bounds.size.height);
 
-	[self.overlayView setFrame:bounds];
+    [self.overlayView setFrame:bounds];
 
     return self.overlayView;
 }
@@ -951,23 +977,41 @@ parentViewController:(UIViewController*)parentViewController
     self.toolbar.items = items;
     [overlayView addSubview: self.toolbar];
 
-    UIImage* reticleImage = [self buildReticleImage];
-    self.reticleView = [[UIImageView alloc] initWithImage:reticleImage];
-
-    self.reticleView.opaque           = NO;
-    self.reticleView.contentMode      = UIViewContentModeScaleAspectFit;
-    self.reticleView.autoresizingMask = (UIViewAutoresizing) (0
-        | UIViewAutoresizingFlexibleLeftMargin
-        | UIViewAutoresizingFlexibleRightMargin
-        | UIViewAutoresizingFlexibleTopMargin
-        | UIViewAutoresizingFlexibleBottomMargin)
-    ;
-
-    [overlayView addSubview: self.reticleView];
+    // Compose reticle
+    int reticleSize = [self.processor.reticleSize intValue];
+    
+    if(_processor.recticleIsImage) {
+        UIImage *image = [UIImage imageNamed:self.processor.reticleImageFile];
+        UIImageView *imageHolder = [[UIImageView alloc] initWithFrame:
+            CGRectMake(
+                overlayView.center.x-reticleSize/2,
+                overlayView.center.y-reticleSize/2,
+                reticleSize,
+                reticleSize)
+        ];
+       imageHolder.image = image;
+       imageHolder.alpha = [self.processor.reticleOpacity floatValue];
+        
+       [overlayView addSubview: imageHolder];
+    } else {
+        UIImage* reticleImage = [self buildReticleImage];
+        self.reticleView = [[UIImageView alloc] initWithImage:reticleImage];
+        self.reticleView.opaque           = NO;
+        self.reticleView.contentMode      = UIViewContentModeScaleAspectFit;
+        self.reticleView.autoresizingMask = (UIViewAutoresizing) (0
+            | UIViewAutoresizingFlexibleLeftMargin
+            | UIViewAutoresizingFlexibleRightMargin
+            | UIViewAutoresizingFlexibleTopMargin
+            | UIViewAutoresizingFlexibleBottomMargin)
+        ;
+        
+       [overlayView addSubview: self.reticleView];
+    }
+    
+    
     [self resizeElements];
     return overlayView;
 }
-
 //--------------------------------------------------------------------------
 
 #define RETICLE_SIZE    500.0f
@@ -978,14 +1022,13 @@ parentViewController:(UIViewController*)parentViewController
 //-------------------------------------------------------------------------
 // builds the green box and red line
 //-------------------------------------------------------------------------
-
 - (UIImage*)buildReticleImage {
      UIImage* result;
     UIGraphicsBeginImageContext(CGSizeMake(RETICLE_SIZE, RETICLE_SIZE));
     CGContextRef context = UIGraphicsGetCurrentContext();
 
     if (self.processor.is2D) {
-        UIColor* color = UIColorWithHexString(self.processor.color);
+        UIColor* color = UIColorFromHexString(self.processor.reticleColor, self.processor.reticleOpacity);
         CGContextSetStrokeColorWithColor(context, color.CGColor);
         CGContextSetLineWidth(context, RETICLE_WIDTH);
         CGContextStrokeRect(context,
@@ -1116,4 +1159,3 @@ parentViewController:(UIViewController*)parentViewController
 }
 
 @end
-i
