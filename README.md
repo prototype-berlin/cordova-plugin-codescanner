@@ -120,11 +120,11 @@ A full example could be:
    );
 ```
 
-## Using a custom reticle image file
+## Using a custom reticle image
 
 If a custom `reticleImageFile` is set, the plugin will use this instead of the qr code pictogram.
 
-Add the custom image file must be available as a `resource-file` in your config.xml:
+The custom image file must be available as a `resource-file` in your config.xml:
 
 `<resource-file src="scanner-reticle.png" target="scanner-reticle.png" />`
 
