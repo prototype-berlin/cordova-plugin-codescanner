@@ -112,9 +112,9 @@ A full example could be:
         disableSuccessBeep: false, // iOS and Android
 
         // Custom reticle config (iOS only)
-        reticleSize: 250, // (custom image file or pictogramn)
-        reticleColor: '#ff0000', // Reticle pictogram color 
-        reticleOpacity: 0.85, // Reticle opacity (custom image file or pictogramn)
+        reticleSize: 250, // Reticle size (pictogramn or custom image file)
+        reticleColor: '#ff0000', // Reticle color (pictogram)
+        reticleOpacity: 0.85, // Reticle opacity (pictogramn or custom image file)
         reticleImageFile: 'scanner-reticle.png', // Reticle image file (squared, must be added as a resource-file)
       }
    );
