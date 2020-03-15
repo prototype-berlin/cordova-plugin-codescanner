@@ -125,9 +125,11 @@ A full example could be:
 If a custom `reticleImageFile` is set, the plugin will use this instead of the qr code pictogram.
 
 Add the custom image file must be available as a `resource-file` in your config.xml:
+
 `<resource-file src="scanner-reticle.png" target="scanner-reticle.png" />`
 
 If you want to use the squared ios icon from resources:
+
 `<resource-file src="resources/ios/icon/icon.png" target="scanner-reticle.png" />`
 
 ## Encoding a Barcode
