@@ -99,21 +99,36 @@ A full example could be:
           alert("Scanning failed: " + error);
       },
       {
-          preferFrontCamera : true, // iOS and Android
-          showFlipCameraButton : true, // iOS and Android
-          showTorchButton : true, // iOS and Android
-          torchOn: true, // Android, launch with the torch switched on (if available)
-          saveHistory: true, // Android, save scan history (default false)
-          prompt : "Place a barcode inside the scan area", // Android
-          resultDisplayDuration: 500, // Android, display scanned text for X ms. 0 suppresses it entirely, default 1500
-          formats : "QR_CODE,PDF_417", // default: all but PDF_417 and RSS_EXPANDED
-          orientation : "landscape", // Android only (portrait|landscape), default unset so it rotates with the device
-          disableAnimations : true, // iOS
-          disableSuccessBeep: false // iOS and Android
-          color: '#FF0000' // Custom reticle color (iOS only)
+        preferFrontCamera : true, // iOS and Android
+        showFlipCameraButton : true, // iOS and Android
+        showTorchButton : true, // iOS and Android
+        torchOn: true, // Android, launch with the torch switched on (if available)
+        saveHistory: true, // Android, save scan history (default false)
+        prompt : "Place a barcode inside the scan area", // Android
+        resultDisplayDuration: 500, // Android, display scanned text for X ms. 0 suppresses it entirely, default 1500
+        formats : "QR_CODE,PDF_417", // default: all but PDF_417 and RSS_EXPANDED
+        orientation : "landscape", // Android only (portrait|landscape), default unset so it rotates with the device
+        disableAnimations : true, // iOS
+        disableSuccessBeep: false, // iOS and Android
+
+        // Custom reticle config (iOS only)
+        reticleSize: 250, // (custom image file or pictogramn)
+        reticleColor: '#ff0000', // Reticle pictogram color 
+        reticleOpacity: 0.85, // Reticle opacity (custom image file or pictogramn)
+        reticleImageFile: 'scanner-reticle.png', // Reticle image file (squared, must be added as a resource-file)
       }
    );
 ```
+
+## Using a custom reticle image file
+
+If a custom `reticleImageFile` is set, the plugin will use this instead of the qr code pictogram.
+
+Add the custom image file must be available as a `resource-file` in your config.xml:
+`<resource-file src="scanner-reticle.png" target="scanner-reticle.png" />`
+
+If you want to use the squared ios icon from resources:
+`<resource-file src="resources/ios/icon/icon.png" target="scanner-reticle.png" />`
 
 ## Encoding a Barcode
 
