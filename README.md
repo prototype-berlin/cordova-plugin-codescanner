@@ -113,7 +113,10 @@ A full example could be:
         reticleSize: 250, // Reticle size (pictogramn or custom image file)
         reticleColor: '#ff0000', // Reticle color (pictogram)
         reticleOpacity: 0.85, // Reticle opacity (pictogramn or custom image file)
-        reticleImageFile: 'scanner-reticle.png', // Reticle image file (squared, must be added as a resource-file)
+        reticleImageFile: 'scanner-reticle.png', // Reticle image file (squared, must be added as a resource-file),
+
+        // reticleAccelerator: true // boolean
+        // reticleStabilizer: true
       }
    );
 ```
