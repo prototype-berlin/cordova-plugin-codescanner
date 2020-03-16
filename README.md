@@ -1,6 +1,4 @@
-# PhoneGap Plugin BarcodeScanner
-
-================================
+# Cordova Plugin CodeScanner
 
 [![Build Status](https://travis-ci.org/phonegap/phonegap-plugin-barcodescanner.svg)](https://travis-ci.org/phonegap/phonegap-plugin-barcodescanner)
 
@@ -120,7 +118,11 @@ A full example could be:
    );
 ```
 
+[custom-reticle-image-screenshot]: custom-reticle-image.png "Using a custom reticle image"
+
 ## Using a custom reticle image
+
+![Using a custom reticle image][custom-reticle-image-screenshot]
 
 If a custom `reticleImageFile` is set, the plugin will use this instead of the qr code pictogram.
 
