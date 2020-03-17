@@ -9,6 +9,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <Cordova/CDVPlugin.h>
+#import <CoreMotion/CoreMotion.h>
 
 //------------------------------------------------------------------------------
 // Delegate to handle orientation functions
@@ -65,6 +66,7 @@
 @property (nonatomic, retain) NSString*                   reticleOpacity;
 @property (nonatomic, retain) NSString*                   reticleImageFile;
 @property (nonatomic)         BOOL                        recticleIsImage;
+@property (nonatomic)         BOOL                        recticleApplyAccelerator;
 
 @property (nonatomic)         BOOL                        is1D;
 @property (nonatomic)         BOOL                        is2D;
@@ -109,7 +111,10 @@
 @property (nonatomic)         BOOL             shutterPressed;
 @property (nonatomic, retain) IBOutlet UIView* overlayView;
 @property (nonatomic, retain) UIToolbar * toolbar;
+
+@property (nonatomic, strong) CMMotionManager *motionManager;
 @property (nonatomic, retain) UIView * reticleView;
+@property (nonatomic, strong) UIImageView *imageHolder;
 // unsafe_unretained is equivalent to assign - used to prevent retain cycles in the property below
 @property (nonatomic, unsafe_unretained) id orientationDelegate;
 
@@ -251,6 +256,8 @@ static UIColor * UIColorFromHexString(NSString *hex, NSString *opacity) {
        processor.recticleIsImage = NO;
          NSLog(@"doesn't exist");
     }
+
+    processor.recticleApplyAccelerator = [options[@"recticleApplyAccelerator"] intValue];
 
     [processor performSelector:@selector(scanBarcode) withObject:nil afterDelay:0];
 }
@@ -831,6 +838,46 @@ parentViewController:(UIViewController*)parentViewController
     [self.view addSubview:[self buildOverlayView]];
     [self startCapturing];
 
+    // Setup accelerometer 
+    self.motionManager = [[CMMotionManager alloc] init];
+       
+    if ([self.motionManager isAccelerometerAvailable]){
+        NSOperationQueue *queue = [[NSOperationQueue mainQueue] init];
+        [self.motionManager
+        startAccelerometerUpdatesToQueue:queue
+        withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
+            //NSLog(@"X = %.04f, Y = %.04f, Z = %.04f",
+            //        accelerometerData.acceleration.x,
+            //        accelerometerData.acceleration.y,
+            //        accelerometerData.acceleration.z);
+            
+            // Apply on two dimensional image
+            CATransform3D rotationAndPerspectiveTransform = CATransform3DIdentity;
+            rotationAndPerspectiveTransform.m34 = 1.0 / -500;
+            rotationAndPerspectiveTransform = CATransform3DRotate(
+                rotationAndPerspectiveTransform,
+                -(0.0 ? 0: accelerometerData.acceleration.y * 100 / M_PI) / 90.0f , 1.0f, 0.0f, 0.0f
+            );
+            rotationAndPerspectiveTransform = CATransform3DRotate(
+                rotationAndPerspectiveTransform,
+                -(0.0 ? 0: accelerometerData.acceleration.x * 100 / M_PI) / 90.0f , 0.0f, 1.0f, 0.0f
+            );
+            
+            self.imageHolder.layer.transform = rotationAndPerspectiveTransform;
+            
+            // Apply on three dimensional geometry
+
+            //self.cubeContainer.rotation = SCNVector4Make(1, 0, 0, -(0.0 ? 0: accelerometerData.acceleration.y * 100 / M_PI) / 90.0f);
+            //self.cubeNode.rotation = SCNVector4Make(0, 1, 0, -(0.0 ? 0: accelerometerData.acceleration.x * 100 / M_PI) / 90.0f);
+
+             // Apply on three dimensional model
+        
+        }];
+    } else {
+        NSLog(@"Accelerometer is not available.");
+    }
+
+
     [super viewDidAppear:animated];
 }
 
@@ -982,17 +1029,17 @@ parentViewController:(UIViewController*)parentViewController
     
     if(_processor.recticleIsImage) {
         UIImage *image = [UIImage imageNamed:self.processor.reticleImageFile];
-        UIImageView *imageHolder = [[UIImageView alloc] initWithFrame:
+        self.imageHolder = [[UIImageView alloc] initWithFrame:
             CGRectMake(
                 overlayView.center.x-reticleSize/2,
                 overlayView.center.y-reticleSize/2,
                 reticleSize,
                 reticleSize)
         ];
-       imageHolder.image = image;
-       imageHolder.alpha = [self.processor.reticleOpacity floatValue];
+       self.imageHolder.image = image;
+       self.imageHolder.alpha = [self.processor.reticleOpacity floatValue];
         
-       [overlayView addSubview: imageHolder];
+       [overlayView addSubview: self.imageHolder];
     } else {
         UIImage* reticleImage = [self buildReticleImage];
         self.reticleView = [[UIImageView alloc] initWithImage:reticleImage];
